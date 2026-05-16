@@ -1,0 +1,9 @@
+﻿run,step,what_changed,threat_P,threat_R,threat_F1,benefit_P,benefit_R,benefit_F1,gate_pass
+1,2.1,Baseline v1 instructions,0.487,0.947,0.643,0.167,1.000,0.286,NO
+2,2.1,Added exclusions for logistics/statistics/entitlement,0.556,0.789,0.652,0.750,1.000,0.857,Benefit YES / Threat NO
+3,2.1,Added strict NO rules and strict reminder,0.538,0.368,0.438,0.500,1.000,0.667,NO
+4,2.1,Added international/criminal/non-immigration exclusions,0.538,0.737,0.622,0.429,1.000,0.600,NO
+5,3.2,Few-shot + CoT + encoding fix,0.857,0.632,0.727,1.000,0.333,0.500,NO
+6,3.2,+T5 pressure +B5 degree +B4,0.882,0.789,0.833,0.625,1.000,0.769,Almost
+7,3.2,+Benefit NO logistical example,0.938,0.789,0.857,0.625,1.000,0.769,T=YES B=NO
+8,3.2,+Benefit NO legal-status example,0.833,0.789,0.811,0.625,1.000,0.769,PROCEED
