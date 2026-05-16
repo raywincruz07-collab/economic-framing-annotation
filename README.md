@@ -62,8 +62,8 @@ install.packages(c("bacchuss", "readr", "dplyr", "tidyr", "caret", "irr", "tibbl
 
 ### Configuration & Security
 1. Copy `.Renviron.example` to `.Renviron`.
-2. Add your `MAKI_API_KEY` to `.Renviron`.
-3. The `config.R` file will automatically load the key from your environment. **Do not hardcode your API key in any script.**
+2. Configure your API credentials (including `MAKI_API_KEY`) in `.Renviron`.
+3. The `config.R` file will automatically load these environment variables. **Do not hardcode API keys or credentials directly in any script.**
 
 ### Execution
 Run the scripts in numbered order (e.g., `Rscript scripts/step0_draw_sample.R`).
@@ -81,9 +81,16 @@ Human-human reliability status:
 
 ## 8. Data Availability
 
-This public GitHub repository is the public-safe reproducible version of the project. It excludes large/private project outputs such as the full translated 10,000-row dataset and the final annotated 10,000-row output. These files are included only in the academic submission package.
+This GitHub repository is the public-safe reproducible version of the project.
 
-To reproduce the full pipeline, place the required input files in the documented paths and configure the API key using `.Renviron.example`. No real API keys are included in this repository.
+Large/private project files are excluded from GitHub, including:
+
+- `data/raw/dataset_10k_translated.csv`
+- `outputs/step5/final_annotated_10k.csv`
+
+These files are included only in the academic submission package.
+
+To reproduce the full pipeline, place the required datasets in the documented paths and configure the API credentials using `.Renviron.example`.
 
 ---
 *Project economic-framing-annotation · University of Mannheim · 2026*
