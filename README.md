@@ -63,7 +63,7 @@ install.packages(c("bacchuss", "readr", "dplyr", "tidyr", "caret", "irr", "tibbl
 ### Configuration & Security
 1. Copy `.Renviron.example` to `.Renviron`.
 2. Add your `MAKI_API_KEY` to `.Renviron`.
-3. Check `config.R` for default API parameters.
+3. The `config.R` file will automatically load the key from your environment. **Do not hardcode your API key in any script.**
 
 ### Execution
 Run the scripts in numbered order (e.g., `Rscript scripts/step0_draw_sample.R`).
@@ -77,10 +77,11 @@ Run the scripts in numbered order (e.g., `Rscript scripts/step0_draw_sample.R`).
 Human-human reliability status:
 - **Status:** READY. Template provided in `data/intercoder/`.
 - **Script:** `scripts/step4_0_intercoder_reliability.R`.
+- **Note:** Intercoder reliability is prepared with scripts and templates; real overlap annotations are included only in the full submission package.
 
 ## 8. Data Availability
 
-This public GitHub version is the public-safe reproducible version of the project. It excludes large/private project outputs such as the full translated 10,000-row dataset and the final annotated 10,000-row output. These files are included only in the academic submission package.
+This public GitHub repository is the public-safe reproducible version of the project. It excludes large/private project outputs such as the full translated 10,000-row dataset and the final annotated 10,000-row output. These files are included only in the academic submission package.
 
 To reproduce the full pipeline, place the required input files in the documented paths and configure the API key using `.Renviron.example`. No real API keys are included in this repository.
 

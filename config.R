@@ -11,9 +11,7 @@ API_KEY     <- Sys.getenv("MAKI_API_KEY", unset = "")
 API_BACKEND <- Sys.getenv("MAKI_API_BACKEND", unset = "compute_proxy")
 
 if (API_KEY == "") {
-  # We don't stop here because some scripts (like reporting) don't need the key.
-  # Instead, API scripts should call check_api_config() from scripts/utils_api.R
-  message("Note: MAKI_API_KEY is not set. API-dependent scripts will require it.")
+  stop("MAKI_API_KEY is not set. Please configure it in your .Renviron file or environment variables.")
 }
 
 # ── Files ────────────────────────────────────────────────────

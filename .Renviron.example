@@ -1,4 +1,1 @@
-MAKI_API_MODEL=ministral-3-14b
-MAKI_API_HOST=https://maki.uni-mannheim.de/v1
-MAKI_API_KEY=PASTE_YOUR_KEY_HERE
-MAKI_API_BACKEND=compute_proxy
+MAKI_API_KEY=your_api_key_here
