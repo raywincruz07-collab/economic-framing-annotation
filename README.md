@@ -24,7 +24,7 @@ flowchart TD
     Step2 --> Step3[3. Few-shot & Chain of Thought]
     Step3 --> Step4[4. Human Gold Standard Validation]
     Step4 --> Valid{Validation Passed?}
-    Valid -- Yes --> Step5[5. Full 10k Production Run]
+    Valid -- Yes --> Step5[5. Full-Dataset Annotation Run]
     Step5 --> Step6[6. Final Reporting]
 ```
 
@@ -49,9 +49,9 @@ economic-framing-annotation/
 │   ├── step2_1_zeroshot.R             ← Baseline test
 │   ├── step2_2_hardcases.R            ← Consistency check
 │   ├── step3_1_baseline.R             ← Logic validation
-│   ├── step3_2_fewshot_cot.R          ← Production logic validation
+│   ├── step3_2_fewshot_cot.R          ← Full-dataset logic validation
 │   ├── step4_validation.R             ← Human gold standard check
-│   ├── step5_full_annotation.R        ← Full 10K production run
+│   ├── step5_full_annotation.R        ← Full-dataset annotation run
 │   ├── step6_report.R                 ← Statistics report
 │   ├── utils.R                        ← Shared helper functions
 │   └── check_project_integrity.R      ← Project state validator
