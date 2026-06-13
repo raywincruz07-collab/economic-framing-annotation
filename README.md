@@ -15,6 +15,19 @@ This repository contains the complete annotation pipeline developed for the proj
 
 The pipeline follows the **bacchuss annotation routine** (Freudenthaler) and is grounded in the *SCM Economy Culture Security Codebuch* (2025) and *de Vreese et al. (2010)*.
 
+## Pipeline Architecture
+
+```mermaid
+flowchart TD
+    Raw[(Full News Corpus)] --> Step0[0. Draw 200-row Sample]
+    Step0 --> Step2[2. Zero-shot & Hardcases]
+    Step2 --> Step3[3. Few-shot & Chain of Thought]
+    Step3 --> Step4[4. Human Gold Standard Validation]
+    Step4 --> Valid{Validation Passed?}
+    Valid -- Yes --> Step5[5. Full 10k Production Run]
+    Step5 --> Step6[6. Final Reporting]
+```
+
 ## 2. Key Findings
 The final validated results against a 200-row human gold standard:
 
@@ -91,6 +104,11 @@ Large/private project files are excluded from GitHub, including:
 These files are included only in the academic submission package.
 
 To reproduce the full pipeline, place the required datasets in the documented paths and configure the API credentials using `.Renviron.example`.
+
+## 9. Limitations
+
+- **Generalizability:** Models and prompts were tuned strictly on German immigration news. Performance on other topics is not guaranteed.
+- **Prevalence Effects:** The low prevalence of "Economic Benefit" frames (2.5%) statistically constrains precision despite achieving perfect recall.
 
 ---
 *Project economic-framing-annotation · University of Mannheim · 2026*
