@@ -112,3 +112,8 @@ To reproduce the full pipeline, place the required datasets in the documented pa
 
 ---
 *Project economic-framing-annotation · University of Mannheim · 2026*
+
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
