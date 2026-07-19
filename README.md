@@ -57,7 +57,7 @@ Initial iterative prompt development was conducted on a 200-row sample to identi
 The finalized prompting strategy was applied to the full 10,000-row translated dataset to establish baseline prevalence rates of threat and benefit frames across the corpus.
 
 ### 3. Submitted Human Comparison (n = 1,002)
-A dedicated subset of 1,002 rows was independently annotated by human coders to create a consensus comparison set. The LLM's outputs were compared against this human consensus to calculate pairwise reliability, Krippendorff's Alpha, precision, and recall metrics.
+A submitted 1,002-row human-labelled comparison set was used to compare the LLM outputs with human consensus labels. The submitted paired coder files were identical, so the calculated agreement statistics describe the files but do not independently establish separate coding processes. The LLM's outputs were compared against this human consensus to calculate pairwise reliability, Krippendorff's Alpha, precision, and recall metrics.
 
 ## Verified Limitations
 
