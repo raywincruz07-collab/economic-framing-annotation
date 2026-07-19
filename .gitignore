@@ -1,23 +1,70 @@
-﻿# Secrets
-.Renviron
-.env
-*.key
-*secret*
-*token*
+# Private Data
+data/raw/*
+data/interim/*
+data/human_annotation/submitted_private/*
+outputs/checkpoints/*
+outputs/logs/*
+archive/*
 
-# Large/private data
-data/raw/dataset_10k_translated.csv
-outputs/step5/final_annotated_10k.csv
-*.zip
-
-# R/system files
+# System/Environment
 .Rhistory
 .RData
+.Ruserdata
 .Rproj.user/
-.DS_Store
-Thumbs.db
+renv/library/
+.env
+.Renviron
 
-# Temporary/cache files
+# Secrets and local configuration
+.Renviron
+.Renviron.*
+!.Renviron.example
+.env
+.env.*
+!.env.example
+*credentials*
+*secret*
+*.pem
+*.key
+
+# Private and non-public data
+data/raw/
+data/interim/
+data/human_annotation/submitted_private/
+
+# Runtime and generated outputs
+outputs/checkpoints/
+outputs/logs/
+archive/
+
+# R and IDE files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+renv/library/
+renv/staging/
+
+# Python
 __pycache__/
+*.pyc
+.venv/
+venv/
+
+# LaTeX build files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.lof
+*.lot
+*.out
+*.toc
+*.synctex.gz
+
+# Temporary files
 *.tmp
 *.bak
+*~
+.DS_Store
+Thumbs.db

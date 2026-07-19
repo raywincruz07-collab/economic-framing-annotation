@@ -1,0 +1,89 @@
+\FloatBarrier
+% ============================================================
+% Chapter 7: Discussion
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Performance on Final 1,002-Row Evaluation}
+The final untouched 1,002-row evaluation yielded the following metrics:
+\begin{itemize}
+    \item \textbf{Final Threat:} Precision 0.3768, Recall 0.8966, F1 0.5306, Balanced accuracy 0.9262
+    \item \textbf{Final Benefit:} Precision 0.3500, Recall 0.8750, F1 0.5000, Balanced accuracy 0.9243
+\end{itemize}
+These results indicate high recall but low precision, driven by model over-classification of positive frames. The model predicted positive frames more frequently than the human consensus. Overall accuracy is inflated by the large number of negative rows, making balanced accuracy and F1 more informative under the observed class imbalance. The low precision reflects false positives being the dominant error type. Crucially, the final 1,002 rows were not used for prompt tuning.
+\subsection{Summary of Findings}
+
+This project successfully annotated 10,000 German immigration news paragraphs along two binary economic framing dimensions using a computational inference pipeline. The prompt-development pilot achieved Threat F1 = 0.811 and Benefit F1 = 0.769 against a 200-row human gold standard, after 8 iterations of prompt refinement across 3 development phases.
+
+The production annotation revealed that economic framing of immigration is relatively rare in the German news corpus (10.1\% of paragraphs contain at least one economic frame), with threat framing (7.3\%) nearly twice as prevalent as benefit framing (4.2\%). This asymmetry aligns with previous findings in the framing literature showing a ``negativity bias'' in immigration news coverage~[6].
+
+\subsection{Methodological Reflections}
+
+\subsubsection{The Iterative Nature of LLM-Assisted Annotation}
+
+A key contribution of this project is the transparent documentation of the iterative development process. The path from Run~1 (Threat F1 = 0.643, Benefit F1 = 0.286) to Run~8 (Threat F1 = 0.811, Benefit F1 = 0.769) was non-linear and involved multiple failures and regressions:
+
+\begin{itemize}
+    \item \textbf{Run~3 regression:} Adding ``strict NO'' rules destroyed Recall, producing the worst Threat F1 (0.438) of the entire process. This taught us that blanket conservatism is counterproductive; targeted exclusion rules are more effective.
+    
+    \item \textbf{Run~5 Benefit collapse:} Switching to few-shot caused Benefit Recall to drop to 0.333. The few-shot examples were too restrictive, teaching the model to reject cases that should have been coded YES.
+    
+    \item \textbf{4 consecutive NaN failures:} The zero-shot approach produced zero true positives across 4 consecutive runs on the 200-row pilot validation, confirming that few-shot examples were essential at this scale.
+    
+    \item \textbf{Phase~1 UNKNOWN catastrophe:} 48.8\% of labels in the first full 10K run were unparseable, requiring a complete redesign of the label cleaning function.
+\end{itemize}
+
+These failures are not anomalies---they are inherent to the process of developing reliable LLM-assisted annotation systems. Researchers adopting similar approaches should expect comparable iteration cycles.
+
+\subsubsection{The 100\% Label Failure Problem}
+
+The most dramatic failure occurred in Step~2.1 (Phase~1), where 100\% of labels were classified as invalid. This was caused by the LLM generating conversational responses instead of the strict \texttt{Label: YES/NO} format. The solution---a robust regex-based \texttt{clean\_label()} function---is now a standard component of the pipeline. This experience highlights the importance of robust output parsing in any LLM-assisted annotation system.
+
+\subsubsection{The Low-Prevalence Challenge}
+
+The Benefit dimension's F1 score (0.769) technically fell below the 0.80 gate threshold. This gap is attributable to the \textbf{low prevalence problem}: with only 5 true Benefit cases in the 200-row pilot validation (2.5\%), each false positive has a disproportionate impact on Precision.
+
+To illustrate: if just 2 of the 3 false positives were eliminated, Benefit Precision would rise from 0.625 to 0.833, and F1 would reach 0.909---well above the gate. The 3 persistent false positives all involved the same ambiguous boundary: paragraphs describing ``legal right to work'' or ``work permit entitlements'' that do not explicitly name an economic outcome but are adjacent to the B4/B5 criteria.
+
+This pattern may reflect ambiguity around the boundary between legal work status and explicitly stated economic benefit. The decision to proceed with F1 = 0.769 was justified by:
+\begin{enumerate}
+    \item Perfect Recall (1.000)---no human-labelled Benefit cases were missed
+    \item The false positives were all borderline B5 cases, not random errors
+    \item Further instruction tightening risked destroying Recall
+\end{enumerate}
+
+\subsection{Comparison with Previous Literature}
+
+The finding that right-leaning outlets (Jouwatch: 31.2\%, Tichys Einblick: 20.0\%) frame immigration as an economic threat at rates 3--4$\times$ the corpus average is consistent with Boomgaarden and Vliegenthart's~[6] observation that anti-immigrant framing is concentrated in ideologically aligned media. The presence of economic benefit framing in business-oriented outlets (Handelsblatt: 11.1\%) reflects these outlets' emphasis on labour market functionality and skilled worker recruitment.
+
+The 89.9\% Neither rate indicates that most paragraphs did not contain either of the two operationalised economic frames. They may address other immigration-related dimensions or provide non-framing factual and logistical information, but these alternatives were not measured in this study.
+
+
+\subsection{Limitations}
+Several limitations constrain the interpretation of these findings:
+\begin{itemize}
+    \item \textbf{Low Positive-Class Prevalence:} Under low prevalence, even a modest number of false positives can substantially reduce precision.
+    \item \textbf{Paragraph-Level Coding:} Coding at the paragraph level, rather than full-article, may cause a loss of context between paragraph blocks.
+    \item \textbf{Translation Effects:} Possible German-to-English translation effects could obscure linguistic nuances.
+    \item \textbf{Ambiguity:} Potential ambiguity in frame criteria definitions.
+    \item \textbf{Exclusion of Development Rows:} The exclusion of 400 rows used during development limits the sample.
+    \item \textbf{Sample Size:} The final evaluation is limited to 1,002 of the 10,000 rows.
+    \item \textbf{No Retuning:} There was no final-sample prompt retuning, and no external replication.
+    \item \textbf{Methodological Limitation (Identical Files):} The paired submitted coder files were identical for all three blocks. The calculated agreement statistics describe the submitted data. File-level identity alone does not independently establish that the annotations were produced through separate coding processes.
+\end{itemize}
+\subsection{Recommendations for Future Work}
+
+\begin{enumerate}
+    \item \textbf{Expand the gold standard:} Increase the Benefit YES cases to at least 20--30 rows through targeted sampling of economics-focused publications to enable more reliable F1 estimation.
+    
+    \item \textbf{Multi-model validation:} Run the same annotation task with GPT-4, Claude, or Llama-3 to assess cross-model agreement.
+    
+    \item \textbf{Multi-dimensional extension:} Extend the pipeline to the Culture and Security dimensions from the SCM Codebuch to provide a complete framing profile.
+    
+    \item \textbf{Temporal analysis:} Examine how economic framing patterns changed across key events (e.g., Ukraine refugee influx, federal elections, EU migration pact negotiations).
+    
+    \item \textbf{Publication as open dataset:} Release the 10,000-row annotated corpus as an open dataset for the research community, following appropriate data licensing.
+\end{enumerate}
+
+

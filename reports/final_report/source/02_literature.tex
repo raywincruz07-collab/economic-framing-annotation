@@ -1,0 +1,61 @@
+% ============================================================
+% Chapter 2: Literature Review
+% ============================================================
+\section{Literature Review and Theoretical Framework}
+\label{sec:literature}
+
+\subsection{Framing Theory in Political Communication}
+
+Framing, as defined by Entman~[5], refers to the process of selecting ``some aspects of a perceived reality and mak[ing] them more salient in a communicating text, in such a way as to promote a particular problem definition, causal interpretation, moral evaluation, and/or treatment recommendation'' (p.~52). In the context of immigration news coverage, economic frames represent one of the most prevalent and politically consequential framing devices~[6].
+
+De~Vreese et~al.~[2] demonstrated that economic framing of immigration operates through both direct and indirect pathways: direct framing effects shape immediate attitudes, while indirect effects operate through the activation of pre-existing economic concerns. Their operationalisation distinguished between \textit{economic threat frames}---emphasising costs, burden, and competition---and \textit{economic benefit frames}---emphasising contributions, growth, and necessity. This binary operationalisation forms the conceptual basis of our annotation scheme.
+
+\subsection{Computational Framing Analysis}
+
+Guo et~al.~[3] provided a comprehensive review of computational approaches to framing analysis, arguing that advances in natural language processing enable the detection of frames at scales previously impossible through manual coding alone. However, they cautioned that computational approaches must be carefully validated against human judgement to ensure construct validity.
+
+The bacchuss annotation routine~[4] addresses this validation requirement through a structured, multi-step process:
+
+\begin{enumerate}
+    \item \textbf{Instruction Drafting:} Develop annotation instructions grounded in the codebook.
+    \item \textbf{Zero-Shot Testing:} Test instructions on a development sample without examples.
+    \item \textbf{Hard-Case Detection:} Use repeated sampling (\texttt{briseus}) to identify ambiguous cases.
+    \item \textbf{Few-Shot Refinement:} Add training examples and chain-of-thought reasoning.
+    \item \textbf{Validation Gate:} The prompt-development process targeted an F1-score of 0.80 for both dimensions, while allowing a documented exception before production.
+    \item \textbf{Production Annotation:} Annotate the full corpus with the validated instruction set.
+\end{enumerate}
+
+\subsection{The SCM Codebook Operationalisation}
+
+The Codebuch SCM Economy Culture Security~[1] provides the operational definitions used in this project. The codebook specifies an \textbf{Occurrence Rule}: frames are coded by \textit{presence}, not by author endorsement. If a paragraph states ``It is false that migrants burden public finances,'' the economic threat frame is coded as present---because the frame \textit{appears} in the text, regardless of whether the author affirms or denies it. This rule is critical for consistent annotation and was integrated as a mandatory instruction in every prompt iteration.
+
+\subsection{Sub-Question Operationalisation}
+
+Following de~Vreese et~al.~[2], we operationalised the abstract concepts of ``economic threat'' and ``economic benefit'' into concrete, checkable sub-criteria:
+
+\begin{table}[H]
+\centering
+\caption{Sub-criteria for Economic Framing Detection}
+\label{tab:subcriteria}
+\begin{tabular}{@{}clp{9cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Dimension} & \textbf{Sub-Criterion} \\
+\midrule
+T1 & Threat & Immigration threatens economic well-being or prospects of receiving society \\
+T2 & Threat & Specific threat to Germany/EU economic prospects caused by immigration \\
+T3 & Threat & Labour market harm: unemployment, displacement, wage depression \\
+T4 & Threat & Welfare/public finance strain: benefits as pull factor, taxpayer burden \\
+T5 & Threat & Costs, burden, overload, capacity limits, need for more resources \\
+\midrule
+B1 & Benefit & Positive economic effects: tax revenue, GDP growth, attracting workers \\
+B2 & Benefit & Positive effects for Germany/EU as a whole \\
+B3 & Benefit & Demographic necessity: aging population, shrinking workforce, pensions \\
+B4 & Benefit & Skilled labour shortage (Fachkr\"aftemangel) filled by immigration \\
+B5 & Benefit & Conditional/lost benefits: more prosperity if integration succeeds \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A paragraph is coded YES for the respective dimension if \textbf{any one} of the sub-criteria (T1--T5 for Threat, B1--B5 for Benefit) is explicitly mentioned.
+
+\newpage

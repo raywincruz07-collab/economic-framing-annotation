@@ -1,0 +1,7 @@
+metric,value
+Threat false positives,43
+Threat false negatives,3
+Benefit false positives,26
+Benefit false negatives,2
+Total label-error records,74
+Unique rows containing one or more errors,70

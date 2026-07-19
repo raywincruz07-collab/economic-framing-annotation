@@ -1,0 +1,147 @@
+% ============================================================
+% Chapter 3: Methodology
+% ============================================================
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Dataset}
+
+\subsubsection{Source Corpus}
+
+The source corpus consists of 659,895 German news paragraphs collected from multiple German-language news outlets covering the period 2022--2026. The corpus was stored as \path{all_multi_paragraphs_2022_2026.RDS} and includes metadata for each paragraph: publication source (\texttt{pub}), date, article identifier, and the original German text (\texttt{text\_block}).
+
+\subsubsection{Sampling Strategy}
+
+A random sample of $N = 10{,}000$ paragraphs was drawn using a fixed random seed (\texttt{set.seed(42)}) to ensure full reproducibility. This sample size was chosen to balance statistical power with computational feasibility: at the university's GPU processing rate, annotating 10,000 paragraphs required approximately 3--4 hours per dimension.
+
+\subsubsection{Translation}
+
+All 10,000 paragraphs were translated from German to English using an automated translation pipeline. The translation was completed on 2026-04-22 in a single overnight run:
+
+\begin{itemize}
+    \item \textbf{Duration:} 3.1 hours
+    \item \textbf{Failures:} 0 (all 10,000 rows translated successfully)
+    \item \textbf{Output:} \texttt{dataset\_10k\_translated.csv}
+\end{itemize}
+
+The English-first strategy was adopted because the LLM (Mistral-3-14B) demonstrated more consistent annotation quality on English text compared to German, particularly for nuanced economic framing distinctions.
+
+\subsubsection{Development Sample}
+
+A fixed 200-row development sample was drawn from the 10,000-row dataset using \texttt{set.seed(2101)}. This sample served as the basis for all iterative instruction development and was manually annotated by the senior annotator (the author) to create a human gold standard (\texttt{gold\_200.csv}).
+
+The 200-row gold standard contained:
+\begin{itemize}
+    \item \textbf{Threat YES cases:} 19 paragraphs (9.5\% prevalence)
+    \item \textbf{Benefit YES cases:} 5 paragraphs (2.5\% prevalence)
+    \item The low Benefit prevalence (2.5\%) is a key methodological challenge discussed in Section~\ref{sec:discussion}.
+\end{itemize}
+
+\subsection{Computational Infrastructure}
+
+\subsubsection{Model}
+
+All annotations were produced using \textbf{Mistral-3-14B} (\texttt{ministral-3-14b}), a 14-billion parameter language model hosted on the University of Mannheim's GPU cluster. The model was accessed via a REST API endpoint (\texttt{https://maki.uni-mannheim.de/v1}) through the \texttt{compute\_proxy} backend.
+
+\subsubsection{Software Stack}
+
+The complete pipeline was implemented in R~4.x using the following packages:
+
+\begin{table}[H]
+\centering
+\caption{Software Dependencies}
+\label{tab:software}
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{Package} & \textbf{Role} & \textbf{Description} \\
+\midrule
+\texttt{bacchuss} & Core framework & Annotation routine: \texttt{bacchuss()}, \texttt{briseus()} \\
+\texttt{readr} & I/O & CSV reading/writing \\
+\texttt{dplyr} & Data wrangling & Filtering, joining, summarisation \\
+\texttt{caret} & Evaluation & Confusion matrices, Precision/Recall/F1 \\
+\texttt{irr} & Reliability & Inter-rater agreement metrics \\
+\texttt{httr2} & HTTP & Direct API calls for custom annotation function \\
+\texttt{jsonlite} & JSON & Response parsing \\
+\texttt{progress} & UX & Progress bars for long-running annotations \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Annotation Procedure}
+
+The annotation procedure followed the Freudenthaler bacchuss routine strictly. Each paragraph was processed for Threat and Benefit in separate passes to prevent cross-contamination between dimensions. This ``one dimension per pass'' strategy ensures that the model's assessment of economic threat does not influence its assessment of economic benefit for the same paragraph.
+
+\subsubsection{Instruction Design Principles}
+
+The annotation instructions were designed according to five principles from the bacchuss routine:
+
+\begin{enumerate}
+    \item \textbf{Role description:} Neutral task framing (``You are a trained content analyst'')
+    \item \textbf{Context:} News paragraphs read literally, no contextual inference
+    \item \textbf{Label definitions:} Sub-criteria markers (T1--T5, B1--B5) with concrete examples
+    \item \textbf{Decision rules:} Explicit exclusion rules for edge cases
+    \item \textbf{Output format:} Structured \texttt{Explanation:} + \texttt{Label:} format
+\end{enumerate}
+
+\subsubsection{Label Cleaning}
+
+A critical technical challenge was the LLM's tendency to produce labels in non-standard formats (e.g., ``Label: **YES**'', conversational responses, or embedded labels within explanations). We developed a robust \texttt{clean\_label()} function (v2) that:
+
+\begin{enumerate}
+    \item Strips asterisks and backticks
+    \item Converts to uppercase
+    \item Searches for \texttt{LABEL: YES} or \texttt{LABEL: NO} patterns
+    \item Falls back to regex extraction of the last YES/NO occurrence
+    \item Returns \texttt{NA} if no valid label is found
+\end{enumerate}
+
+This function was critical: in the first pipeline run (Phase~1), \textbf{100\% of labels were classified as invalid} because the LLM returned conversational responses instead of strict YES/NO labels. After implementing \texttt{clean\_label()} v2, the mistype rate dropped to \textbf{0\%}.
+
+\subsubsection{Text Cleaning}
+
+Non-ASCII characters in the translated texts caused HTTP 400 errors from the university API. A \texttt{clean\_text\_api()} helper was developed to:
+
+\begin{enumerate}
+    \item Convert text to UTF-8 encoding
+    \item Replace all remaining non-ASCII characters with spaces
+\end{enumerate}
+
+This fix was applied universally across all pipeline scripts after being discovered during the Phase~2 reruns.
+
+\subsection{Validation Framework}
+
+The prompt-development process targeted an F1-score of 0.80 for both dimensions, while allowing a documented exception before production. The F1-score is the harmonic mean of Precision and Recall:
+
+\begin{equation}
+F_1 = 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}
+\end{equation}
+
+Additionally, the \texttt{briseus()} consistency check required fewer than 40 out of 200 rows to show uncertainty (agreement $\leq 0.6$ across 5 repeated runs at temperature~0.7).
+
+\newpage
+
+
+\subsection{Final Human Validation Design}
+\label{sec:final_human_validation_design}
+
+To rigorously evaluate the final model, we designed a To evaluate the final model, we designed a structured human-validation study using a three-block, two-coder-per-row assignment..
+\begin{itemize}
+    \item \textbf{Source Corpus:} 10,000 paragraph-level text blocks.
+    \item \textbf{Exclusions:} We excluded the 400 rows previously used for development and pilot validation.
+    \item \textbf{Eligible Pool:} This left an eligible sampling pool of 9,600 rows.
+    \item \textbf{Sampling Method:} We used simple random sampling without replacement with a fixed seed of 1002.
+    \item \textbf{Sample Size:} The final evaluation sample consisted of 1,002 rows.
+    \item \textbf{Blocks:} The sample was split into three mutually exclusive blocks of 334 rows each.
+    \item \textbf{Assignments:} Three human coders were assigned to the blocks: Part A (Pravallika and Raywin), Part B (Raywin and Namrath), Part C (Namrath and Pravallika).
+    \item \textbf{Observations:} This generated exactly two submitted coder observations per row, totaling 2,004 coder-row observations.
+    \item \textbf{Tasks:} Economic Threat and Economic Benefit were coded using binary labels (0 and 1).
+    \item \textbf{Matrix Structure:} This design created a missing-by-design three-coder matrix to allow for robust inter-coder reliability estimation.
+    \item \textbf{Reliability Metrics:} We calculated pairwise percentage agreement, Cohen's kappa, and nominal Krippendorff's Alpha.
+    \item \textbf{Consensus Formulation:} A consensus label was constructed based on submitted two-coder agreement.
+    \item \textbf{Comparison:} The human consensus was joined to the frozen 10,000-row LLM output using \texttt{row\_num}.
+    \item \textbf{Prompt Freezing:} \textbf{No prompt tuning} was conducted using the 1,002-row final sample.
+    \item \textbf{Final Metrics Evaluated:} Precision, recall, F1-score, accuracy, specificity, negative predictive value, and balanced accuracy.
+\end{itemize}
+
+This evaluation is strictly distinct from the earlier pilot phase and represents the untouched final evaluation set.
+

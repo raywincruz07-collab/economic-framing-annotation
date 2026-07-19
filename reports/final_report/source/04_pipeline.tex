@@ -1,0 +1,377 @@
+﻿% ============================================================
+% Chapter 4: Pipeline Implementation
+% ============================================================
+\section{Pipeline Implementation: Step-by-Step}
+\label{sec:pipeline}
+
+This section documents every step of the annotation pipeline in chronological order, including all failures, retries, and corrections.
+
+% ------------
+\subsection{Step 0 --- Sample Drawing}
+\label{sec:step0}
+
+\textbf{Date:} 2026-04-22 \quad \textbf{Script:} \texttt{step0\_draw\_sample.R}
+
+A fixed 200-row development sample was drawn from the 10,000-row translated dataset using \texttt{set.seed(2101)}. The sample was saved as \texttt{sample\_200.csv} and served as the basis for all subsequent validation steps.
+
+\textbf{Outcome:} 200 rows drawn successfully. No failures.
+
+% ------------
+\subsection{Phase 1: Initial Pipeline Run (2026-04-22 to 2026-04-26)}
+\label{sec:phase1}
+
+The first complete execution of the bacchuss routine used a 25-row gold standard (a subset of the 200-row sample) and generic instruction definitions.
+
+\subsubsection{Step 2.1 --- Zero-Shot Test (Attempt 1)}
+\label{sec:step21_attempt1}
+
+\textbf{Date:} 2026-04-22 08:31 \quad \textbf{Sample:} 50 rows (seed=2101)
+
+\textbf{Runtime:} Threat = 0.3~min $|$ Benefit = 0.3~min
+
+\begin{table}[H]
+\centering
+\caption{Step 2.1 Label Distribution --- Attempt 1 (Phase 1)}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Label} & \textbf{Threat} & \textbf{Benefit} \\
+\midrule
+YES & 12 & 13 \\
+NO  & 38 & 37 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Critical Failure:} \textcolor{fail}{\textbf{100\% of labels were classified as invalid.}} The LLM returned conversational responses (e.g., ``Based on my analysis, I would classify this as...'') instead of the strict \texttt{Label: YES/NO} format. All 50 threat labels and all 50 benefit labels failed the format validation.
+
+\textbf{Mistype rate:} Threat = 100\% $|$ Benefit = 100\%
+
+\textbf{Root cause:} The initial \texttt{clean\_label()} function (v1) only accepted exact ``YES'' or ``NO'' strings and did not parse conversational output.
+
+\textbf{Number of attempts at this step:} 2 (the step was run twice on 2026-04-22 at 08:31 and 08:32, both with identical 100\% failure rates)
+
+\subsubsection{Step 2.1 --- Zero-Shot Test (Attempt 2)}
+
+\textbf{Date:} 2026-04-22 08:32 \quad Identical to Attempt~1. Same 100\% invalid label rate.
+
+\textbf{Resolution:} Development of \texttt{clean\_label()} v2 with regex fallback. After this fix, subsequent runs achieved 0\% mistype rates.
+
+% ------------
+\subsubsection{Step 2.2 --- Hard-Case Detection (Phase 1)}
+\label{sec:step22_phase1}
+
+\textbf{Date:} 2026-04-22 09:32 \quad \textbf{Method:} \texttt{briseus()} --- 5 runs $\times$ temperature 0.7
+
+\textbf{Runtime:} Threat = 1.3~min $|$ Benefit = 1.3~min
+
+\begin{table}[H]
+\centering
+\caption{Hard-Case Detection Results --- Phase 1}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Any disagreement ($<$1.0)} & \textbf{Very uncertain ($\leq$0.6)} \\
+\midrule
+Threat  & 10 / 50 & 1 / 50 \\
+Benefit & 14 / 50 & 5 / 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Observation:} Benefit showed substantially more uncertainty (14 disagreements, 5 very uncertain) compared to Threat (10 disagreements, 1 very uncertain), foreshadowing the persistent difficulty with Benefit classification.
+
+% ------------
+\subsubsection{Step 3 --- Zero-Shot Validation (Phase 1)}
+\label{sec:step3_phase1}
+
+\textbf{Date:} 2026-04-26 15:25 \quad \textbf{Gold standard:} 25 rows
+
+\textbf{Runtime:} Threat = 0.1~min $|$ Benefit = 0.1~min
+
+\begin{table}[H]
+\centering
+\caption{Validation Metrics --- Phase 1, Zero-Shot (25 gold rows)}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Gate} \\
+\midrule
+Threat  & 1.000 & 1.000 & 1.000 & \passmark \\
+Benefit & 0.500 & 1.000 & 0.667 & \failmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Result:} Threat achieved perfect scores on the small gold standard. Benefit \textbf{failed} with F1~=~0.667 due to low Precision (0.500)---the model identified all true Benefit cases but also produced false positives.
+
+\textbf{Decision:} Proceed to Step~3.2 (few-shot refinement) for Benefit.
+
+% ------------
+\subsubsection{Step 3.2 --- Structured Inference Validation (Phase 1)}
+\label{sec:step32_phase1}
+
+\textbf{Date:} 2026-04-26 15:32 \quad \textbf{Few-shot examples:} 4 \quad \textbf{Mode:} Structured Explanations
+
+\begin{table}[H]
+\centering
+\caption{Validation Metrics --- Phase 1, Structured Inference (25 gold rows)}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Gate} \\
+\midrule
+Threat  & 1.000 & 1.000 & 1.000 & \passmark \\
+Benefit & 0.400 & 1.000 & 0.571 & \failmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Failure:} Benefit F1 \textit{decreased} from 0.667 to 0.571 after adding few-shot examples. Precision dropped from 0.500 to 0.400. The few-shot examples introduced additional false positives.
+
+\textbf{Residual hard cases:} Threat = 42/50 uncertain $|$ Benefit = 45/50 uncertain
+
+\textbf{Decision:} Despite the failure, proceeded to Step~4 (full annotation) because the 25-row gold standard was too small for reliable metrics, and the team assessed that the structured inference approach was the best available option.
+
+% ------------
+\subsubsection{Step 4 --- Full 10,000-Row Annotation (Phase 1, First Attempt)}
+\label{sec:step4_phase1}
+
+\textbf{Date:} 2026-04-26 17:09 \quad \textbf{Method:} Structured Inference
+
+\begin{table}[H]
+\centering
+\caption{Frame Distribution --- Phase 1 Full Annotation (\textbf{FAILED})}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Frame Type} & \textbf{Count} & \textbf{\%} \\
+\midrule
+NEITHER       & 5,076  & 50.8\% \\
+\rowcolor{fail!15} UNKNOWN       & 4,883  & 48.8\% \\
+BENEFIT\_ONLY & 21     & 0.2\% \\
+THREAT\_ONLY  & 19     & 0.2\% \\
+BOTH          & 1      & 0.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Critical Failure:} \textcolor{fail}{\textbf{4,883 rows (48.8\%) were classified as UNKNOWN.}} Nearly half of all paragraphs could not be assigned a valid label. The LLM produced conversational responses that the label parser could not handle.
+
+\textbf{Additional Problem:} Only 0.4\% of paragraphs were classified as Threat YES and 0.4\% as Benefit YES---far below expected rates for a corpus of immigration news.
+
+\textbf{Root cause:} The generic prompt definitions (``economic risk, loss, vulnerability'') were too abstract, causing the model to miss nuanced economic framing that did not use those exact terms.
+
+% ------------
+\subsubsection{Step 5 --- Report Statistics (Phase 1, Post-Processing)}
+\label{sec:step5_phase1}
+
+\textbf{Date:} 2026-04-26 17:13
+
+After applying the improved \texttt{clean\_label()} v2 as a post-processing fix to the Phase~1 output, the UNKNOWN labels were resolved:
+
+\begin{table}[H]
+\centering
+\caption{Frame Distribution --- Phase 1 After Post-Processing}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Frame} & \textbf{N} & \textbf{\%} \\
+\midrule
+Neither        & 7,001 & 70.0\% \\
+Threat (YES)   & 2,044 & 20.4\% \\
+Benefit (YES)  & 2,125 & 21.2\% \\
+Both           & 1,171 & 11.7\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Problem:} While the UNKNOWN labels were resolved, the Threat rate (20.4\%) and Benefit rate (21.2\%) were \textit{implausibly high and nearly identical}. This symmetric distribution suggested systematic over-coding---the model was labelling too many paragraphs as containing economic frames.
+
+\textbf{Professor's Assessment:} The results were reviewed by the supervisor, who identified two critical issues: (1) the UNKNOWN label problem indicated a fundamental parsing failure, and (2) the high NEITHER rate even after fixing (70\%) combined with implausibly symmetric threat/benefit rates indicated that the instructions needed a complete redesign.
+
+\newpage
+
+% ============
+\subsection{Phase 2: Instruction Redesign (2026-05-04)}
+\label{sec:phase2}
+
+\textbf{Trigger:} Professor review of Phase~1 results.
+
+Following the professor's recommendation, the annotation instructions were completely redesigned:
+
+\subsubsection{Changes Implemented}
+
+\begin{enumerate}
+    \item \textbf{Sub-Question Operationalisation:} Replaced generic frame definitions with the 10 specific sub-criteria from de~Vreese et~al.~[2] (T1--T5 for Threat, B1--B5 for Benefit).
+    
+    \item \textbf{Label Parsing Fix:} Deployed \texttt{clean\_label()} v2 with regex fallback and \texttt{sapply()} vectorisation across all scripts.
+    
+    \item \textbf{Few-Shot Examples:} Replaced 4 generic examples with 5 domain-specific examples aligned to the sub-criteria.
+    
+    \item \textbf{Text Cleaning:} Added \texttt{clean\_text\_api()} to strip non-ASCII characters that caused API errors.
+\end{enumerate}
+
+\subsubsection{Step 2.1 --- Zero-Shot Test (Phase 2)}
+\label{sec:step21_phase2}
+
+\textbf{Date:} 2026-05-04 14:28 \quad \textbf{Sample:} 50 rows
+
+\begin{table}[H]
+\centering
+\caption{Step 2.1 Label Distribution --- Phase 2}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Label} & \textbf{Threat} & \textbf{Benefit} \\
+\midrule
+YES & 11 & 11 \\
+NO  & 39 & 39 \\
+\midrule
+\textbf{Invalid labels} & \textbf{0} & \textbf{0} \\
+\textbf{Mistype rate}   & \textbf{0\%} & \textbf{0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Success:} The \texttt{clean\_label()} v2 fix eliminated all label parsing errors. Zero mistyped labels.
+
+\subsubsection{Step 2.2 --- Hard-Case Detection (Phase 2)}
+\label{sec:step22_phase2}
+
+\textbf{Date:} 2026-05-04 14:32 \quad \textbf{Runtime:} Threat = 1.8~min $|$ Benefit = 1.8~min
+
+\begin{table}[H]
+\centering
+\caption{Hard-Case Detection Results --- Phase 2}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Any disagreement ($<$1.0)} & \textbf{Very uncertain ($\leq$0.6)} \\
+\midrule
+Threat  & 11 / 50 & 4 / 50 \\
+Benefit & 14 / 50 & 3 / 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Step 3 --- Zero-Shot Validation (Phase 2)}
+\label{sec:step3_phase2}
+
+\textbf{Date:} 2026-05-04 14:33 \quad \textbf{Gold standard:} 25 rows
+
+\begin{table}[H]
+\centering
+\caption{Validation Metrics --- Phase 2, Zero-Shot (25 gold rows)}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Gate} \\
+\midrule
+Threat  & 0.000 & 0.000 & NaN & \failmark \\
+Benefit & 0.500 & 1.000 & 0.667 & \failmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Critical Failure:} Threat produced \textbf{zero true positives}---Precision, Recall, and F1 were all 0 or undefined. The model failed to identify any Threat cases in the small gold standard. This was attributed to the 25-row gold standard being too small and not containing enough positive Threat cases for the new sub-criteria.
+
+\textbf{Number of attempts:} 1. Proceeded directly to Step~3.2.
+
+\subsubsection{Step 3.2 --- Structured Inference (Phase 2)}
+\label{sec:step32_phase2}
+
+\textbf{Date:} 2026-05-04 14:37 \quad \textbf{Few-shot examples:} 5
+
+\begin{table}[H]
+\centering
+\caption{Validation Metrics --- Phase 2, Structured Inference (25 gold rows)}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Dimension} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Gate} \\
+\midrule
+Threat  & 1.000 & 1.000 & 1.000 & \passmark \\
+Benefit & 0.333 & 1.000 & 0.500 & \failmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Partial success:} Threat recovered to perfect scores with few-shot examples. Benefit remained below the gate with F1~=~0.500.
+
+\textbf{Residual hard cases:} 49/50 Threat uncertain $|$ 49/50 Benefit uncertain
+
+\textbf{Decision:} The team recognised that the 25-row gold standard was insufficient for reliable validation. A new 200-row pilot validation was prepared.
+
+\subsubsection{Step 4 --- Full 10,000-Row Annotation (Phase 2)}
+\label{sec:step4_phase2}
+
+\textbf{Date:} 2026-05-04 16:43 \quad \textbf{Runtime:} $\sim$2 hours per dimension
+
+\begin{table}[H]
+\centering
+\caption{Frame Distribution --- Phase 2 Full Annotation}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Frame Type} & \textbf{Count} & \textbf{\%} \\
+\midrule
+NEITHER       & 6,928  & 69.3\% \\
+\rowcolor{fail!15} UNKNOWN       & 797    & 8.0\% \\
+THREAT\_ONLY  & 803    & 8.0\% \\
+BOTH          & 785    & 7.8\% \\
+BENEFIT\_ONLY & 687    & 6.9\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Improvement:} UNKNOWN labels dropped from 48.8\% to 8.0\% (from 4,883 to 797). Frame rates became more plausible: Threat YES = 20.6\%, Benefit YES = 14.9\%.
+
+\textbf{Remaining Problem:} 797 UNKNOWN rows persisted, and the overall distribution still showed a higher-than-expected Benefit rate, suggesting residual over-coding on Benefit.
+
+\textbf{Decision:} A third phase of refinement was needed with a larger gold standard and more targeted instruction tuning.
+
+\newpage
+
+% ============
+\subsection{Phase 3: Precision Tuning with 200-row pilot validation (2026-05-05 to 2026-05-07)}
+\label{sec:phase3}
+
+Phase~3 represented the most intensive period of instruction refinement. The senior annotator (the author) manually labelled all 200 development rows to create a robust gold standard, then systematically tuned the instructions through 4 sub-phases of false-positive analysis.
+
+\subsubsection{Phase 3.1: Baseline Measurement}
+
+\textbf{Logic:} Standard bacchuss routine with T1--T5/B1--B5 sub-criteria (no exclusion rules).
+
+\textbf{Result:}
+\begin{itemize}
+    \item Threat F1 = 0.44 $|$ Benefit F1 = 0.28
+    \item Both dimensions achieved perfect Recall but had massive Precision problems (``over-coding'')
+\end{itemize}
+
+\textbf{Observation:} The system was calling too many paragraphs YES because it was too sensitive to the mere presence of refugees in the text. Any paragraph mentioning refugees near economic terms was classified as containing an economic frame.
+
+\subsubsection{Phase 3.2: Logistics \& Statistics Sharpening}
+
+\textbf{Logic Change:} Added explicit exclusion rules:
+\begin{itemize}
+    \item Logistics reporting (``accommodation was set up'') without cost language = NO
+    \item Statistics reporting (``103 beds available'') without burden language = NO
+\end{itemize}
+
+\textbf{Reason:} Many news reports describe the \textit{act} of housing refugees without framing it as an economic burden. The system was confusing ``housing'' with ``cost.''
+
+\textbf{Result:} Threat F1 jumped from 0.44 to \textbf{0.80} (Precision: 0.28 $\rightarrow$ 0.69). \passmark{} for Threat.
+
+\subsubsection{Phase 3.3: Macroeconomic \& International Gate}
+
+\textbf{Logic Change:} Added exclusions for:
+\begin{itemize}
+    \item General economic news (currencies, global trade, Russia/Ukraine) = NO
+    \item Employment agency process descriptions (``holding discussions'') = NO
+\end{itemize}
+
+\textbf{Reason:} The system over-identified Benefit whenever it saw words like ``Dollar,'' ``Euro,'' or ``Employment Agency,'' even if the text was irrelevant to immigration.
+
+\textbf{Result:} Benefit F1 improved from 0.28 to 0.54 (Precision: 0.14 $\rightarrow$ 0.37). Still below gate.
+
+\subsubsection{Phase 3.4: Inverse Frame Protection}
+
+\textbf{Logic Change:}
+\begin{enumerate}
+    \item ``Threat $\neq$ Benefit'' rule: Do not code Benefit if the text describes a Threat unless a positive outcome is independent.
+    \item ``Budgetary Flow'' rule: Money returning to treasury is logistical, not a benefit.
+\end{enumerate}
+
+\textbf{Result:} Benefit F1 = 0.60 (Precision: 0.42). Still below gate, but with only 3 true Benefit rows in the subsample, 4 false positives kept Precision mathematically low.
+
+\newpage

@@ -1,0 +1,7 @@
+block,coder_1,coder_2,label,coder1_1_coder2_1,coder1_1_coder2_0,coder1_0_coder2_1,coder1_0_coder2_0,total
+Part_A,raywin,pravallika,economic_threat,13,0,0,321,334
+Part_A,raywin,pravallika,economic_benefit,7,0,0,327,334
+Part_B,raywin,namrath,economic_threat,12,0,0,322,334
+Part_B,raywin,namrath,economic_benefit,6,0,0,328,334
+Part_C,namrath,pravallika,economic_threat,4,0,0,330,334
+Part_C,namrath,pravallika,economic_benefit,3,0,0,331,334
