@@ -1,74 +1,156 @@
-# Economic Framing Annotation: An LLM-Assisted Computational Content Analysis
+# Economic Framing Annotation
 
-This repository contains the replication materials and analysis pipeline for evaluating economic threat and benefit framing in media texts. 
+**LLM-Assisted Computational Content Analysis of Economic Threat and Economic Benefit Framing in German Immigration News**
 
-The study develops an automated annotation pipeline to classify text according to defined economic framing sub-criteria, subsequently comparing the outputs against human consensus evaluations to measure system reliability and limitations.
+## 1. Project Overview
 
-## Research Questions
+Our study examines German immigration-news paragraphs published from 2022 to 2026. We investigate the prevalence of Economic Threat and Economic Benefit framing by drawing a 10,000-paragraph production sample from a broader source corpus of 659,895 paragraphs. The project treats Threat and Benefit as separate binary labels, which allows four combined outcomes for any given paragraph: Neither, Threat only, Benefit only, or Both.
 
-1. How reliably can Large Language Models (LLMs) replicate human annotation of complex, multi-criteria economic frames (threat and benefit)?
-2. What are the specific conditions and linguistic nuances where automated classification diverges from human consensus in framing analysis?
-3. How do identified framing frequencies vary across publication outlets in the dataset?
+To achieve this at scale, our analysis uses Mistral-3-14B through the University of Mannheim maKI infrastructure. We follow an adapted bacchuss annotation-development workflow, which includes iterative prompt development, full production annotation, and a comparison with submitted human labels.
 
-## Pipeline Architecture
+## 2. Key Resources
 
-The following diagram illustrates the study's sequential research methodology:
+- [Final Research Report](reports/final_report/Economic_Framing_Annotation_Research_Report.pdf)
+- [Methodology](docs/methodology.md)
+- [Codebook](docs/codebook.md)
+- [Annotation Protocol](docs/annotation_protocol.md)
+- [Reproducibility Guide](docs/reproducibility.md)
+- [Known Limitations](docs/limitations.md)
+- [Aggregate Results](outputs/)
+- [Pipeline Scripts](scripts/)
+
+## 3. Research Questions
+
+**Primary question:**
+To what extent do German immigration-news paragraphs published between 2022 and 2026 contain Economic Threat and Economic Benefit frames?
+
+**Supporting questions:**
+1. How can the SCM economic-frame codebook be translated into explicit LLM instructions?
+2. How does model performance change across iterative prompt revisions?
+3. How do final frame rates differ descriptively across publications?
+4. How well do the production labels agree with submitted human labels, and what types of errors remain?
+
+## 4. Frame Definitions
+
+**Economic Threat:**
+Immigration is explicitly connected to economic harm, public cost, welfare strain, labour-market pressure, resource shortages or capacity overload.
+
+**Economic Benefit:**
+Immigration is explicitly connected to economic growth, tax revenue, labour supply, skilled-worker shortages, demographic need or prevented economic loss.
+
+*Clarifications on Coding:*
+- The labels are coded separately.
+- A paragraph may contain both frames simultaneously.
+- Quoted or rejected frames count under the study’s occurrence rule.
+- Logistical or legal-status reporting alone is not automatically an economic frame.
+
+## 5. Study Design
+
+Our study design was executed across three main stages:
+
+### Prompt-development pilot
+- n = 200
+- used for instruction development and boundary-case analysis;
+- not a fully independent final evaluation set.
+
+### Production annotation
+- n = 10,000
+- final instructions applied to the production sample.
+
+### Submitted human comparison
+- n = 1,002
+- model outputs compared against submitted human consensus labels;
+- paired submitted coder files were identical;
+- this file identity does not establish separate independent coding processes.
+
+## 6. Research Workflow
 
 ```mermaid
-graph TD
-    A[Data Preparation & Translation] --> B(Zero-Shot Exploration)
-    B --> C(Prompt Engineering & Few-Shot CoT)
-    C --> D[Prompt-Development Pilot<br/>n=200]
-    D --> E(Production Annotation)
-    E --> F[Full Corpus Results<br/>n=10,000]
-    F --> G(Human Comparison Study)
-    G --> H[Submitted Human Comparison<br/>n=1,002]
-    H --> I((Analysis & Reporting))
+flowchart TD
+    A[Source corpus: 659,895 paragraphs] --> B[Fixed 10,000-row sample]
+    B --> C[German-to-English translation]
+    C --> D[200-row prompt-development pilot]
+    D --> E[Zero-shot testing]
+    E --> F[Repeated hard-case analysis]
+    F --> G[Eight measured prompt iterations]
+    G --> H[Frozen Threat and Benefit instructions]
+    H --> I[Two-pass production annotation]
+    I --> J[10,000-row labelled corpus]
+    J --> K[Submitted 1,002-row human comparison]
+    K --> L[Performance, error and limitation analysis]
 ```
 
-## Class Definitions
+## 7. Headline Results
 
-The annotation schema divides economic framing into two primary dimensions. These dimensions are not mutually exclusive; a single paragraph can contain neither, one, or both frames.
+**Production Annotation — 10,000 Paragraphs**
 
-### Economic Threat
-A paragraph is coded as containing an Economic Threat frame if it explicitly mentions any of the following:
-- General threats to economic well-being or prospects.
-- Specific threats to the economic prospects of the receiving country/region.
-- Labor market harm (e.g., displacement, wage depression).
-- Strain on welfare or public finances (e.g., taxpayer burden, benefit depletion).
-- Explicit mentions of capacity limits, financial costs, resource shortages, or infrastructure overload (e.g., housing shortages, administrative backlogs).
+| Classification | Count | Percentage |
+| :--- | :--- | :--- |
+| Neither | 8,989 | 89.9% |
+| Threat only | 595 | 6.0% |
+| Benefit only | 280 | 2.8% |
+| Both | 136 | 1.4% |
 
-### Economic Benefit
-A paragraph is coded as containing an Economic Benefit frame if it explicitly mentions any of the following:
-- Positive economic effects such as tax revenue or economic growth.
-- Overall positive economic effects for the receiving country/region.
-- Demographic necessity (e.g., aging populations, shrinking workforce).
-- Filling labor shortages or providing necessary skills.
-- The potential for prosperity contingent on integration measures, or the explicit loss of economic benefits due to restrictive policies (e.g., unrecognised degrees, lack of work permits).
+- total Threat-positive: 731 — 7.3%;
+- total Benefit-positive: 416 — 4.2%.
 
-## Verified Results
+**Submitted Human Comparison — 1,002 Paragraphs**
 
-The analysis generated three distinct tiers of results across the pipeline:
+| Dimension | Precision | Recall | F1 | Accuracy |
+| :--- | :--- | :--- | :--- | :--- |
+| Economic Threat | 0.377 | 0.897 | 0.531 | 0.954 |
+| Economic Benefit | 0.350 | 0.875 | 0.500 | 0.972 |
 
-### 1. Prompt-Development Pilot (n = 200)
-Initial iterative prompt development was conducted on a 200-row sample to identify boundary conditions and optimize the Few-Shot Chain-of-Thought (CoT) instructions.
+**Prompt-Development Pilot — 200 Paragraphs**
 
-### 2. Production Results (n = 10,000)
-The finalized prompting strategy was applied to the full 10,000-row translated dataset to establish baseline prevalence rates of threat and benefit frames across the corpus.
+| Dimension | Precision | Recall | F1 |
+| :--- | :--- | :--- | :--- |
+| Economic Threat | 0.833 | 0.789 | 0.811 |
+| Economic Benefit | 0.625 | 1.000 | 0.769 |
 
-### 3. Submitted Human Comparison (n = 1,002)
-A submitted 1,002-row human-labelled comparison set was used to compare the LLM outputs with human consensus labels. The submitted paired coder files were identical, so the calculated agreement statistics describe the files but do not independently establish separate coding processes. The LLM's outputs were compared against this human consensus to calculate pairwise reliability, Krippendorff's Alpha, precision, and recall metrics.
+## 8. Interpretation of Results
 
-## Verified Limitations
+The classifier was sensitive but over-inclusive. It identified most human-positive cases, reflected by high recall, but also classified too many human-negative paragraphs as positive, reflected by lower precision.
 
-This study contains several methodological limitations that constrain the generalizability of the findings:
+## 9. Repository Structure
 
-- **19-Row Pilot/Evaluation Overlap**: There is an inadvertent 19-row overlap between the prompt-development pilot set and the final evaluation set, slightly reducing the strict independence of the test.
-- **Identical Paired Submitted Coder Files**: In the submitted records, paired individual coder files were found to be identical, limiting the ability to assess true initial inter-coder divergence prior to consensus.
-- **Coder-Workbook Criterion Mismatch**: There are documented discrepancies between the operational criteria provided in the coding workbooks and the final synthesized instructions used for evaluation.
-- **Translation Limitations**: The analysis was conducted on English translations of original German texts, potentially introducing translational artifacts or losing language-specific nuances.
-- **Low Positive-Frame Prevalence**: The extreme sparsity of the Economic Benefit frame within the dataset restricts the statistical power available to evaluate the model's recall on positive framing.
-- **Paragraph-Level Context Limitations**: Classification occurred strictly at the paragraph level, meaning broader narrative context or article-level intent was inaccessible to both human coders and the model.
-- **Descriptive-Only Outlet Comparisons**: Analyses comparing framing across different publication outlets remain purely descriptive and do not establish causal relationships.
+- `config/` — prompts, paths and schemas;
+- `docs/` — methodology and research documentation;
+- `outputs/` — public-safe aggregate results;
+- `references/` — bibliography and citation records;
+- `reports/final_report/` — approved final report;
+- `scripts/` — the authoritative 00–11 workflow;
+- `src/R/` — shared R functions;
+- `tests/` — public-safe tests;
+- `metadata/` — only academically useful metadata.
 
-**Note on Evaluation**: The human consensus dataset serves as a functional comparison point for this study, but should not be considered a perfect gold standard. True independent annotation reliability has not been definitively proven. Furthermore, the model configuration presented here is strictly an exploratory research tool and is not production-ready for automated media monitoring.
+## 10. Reproducibility and Quick Start
+
+For full instructions on reproducing the analysis, running the tests, and setting up the environment, please refer to the [Reproducibility Guide](docs/reproducibility.md).
+
+## 11. Data Availability
+
+The row-level source corpus, translations, completed coder files and final annotated dataset are not distributed through this public repository because of copyright, institutional-access and academic data-management restrictions. The repository provides public-safe code, prompts, aggregate results, documentation and the final research report.
+
+## 12. Known Limitations
+
+- English translations may alter nuance from the German source text.
+- The instructions were developed for German immigration-news content and may not generalise to other domains.
+- Positive frames were rare, making precision sensitive to a relatively small number of false positives.
+- A legacy identifier issue caused 19 prompt-development rows to overlap with the submitted 1,002-row evaluation.
+- Paired submitted coder files were identical. Calculated agreement statistics describe the submitted files but cannot establish independent coding.
+- Criterion descriptions in coder workbooks did not perfectly align with the final configuration definitions.
+- Paragraph-level analysis may miss information appearing in neighbouring paragraphs.
+- Outlet-level comparisons are descriptive and must not be interpreted as causal or ideological rankings.
+
+## 13. Final Research Report
+
+A full methodological account and discussion of findings is available in the [Final Research Report](reports/final_report/Economic_Framing_Annotation_Research_Report.pdf).
+
+## 14. Citation
+
+Please refer to `CITATION.cff` for the recommended citation metadata.
+
+## 15. License
+
+This repository is licensed under the MIT License. See `LICENSE` for details.

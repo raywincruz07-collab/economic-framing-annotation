@@ -3,7 +3,7 @@
 
 ### Academic Basis
 - Codebuch SCM Economy Culture Security (2025)
-- de Vreese, Boomgaarden & Semetko (2010) — sub-question operationalization
+- de Vreese, Boomgaarden & Semetko (2011) — sub-question operationalization
 - Guo, Su & Chen (2023) — computational framing analysis
 - Freudenthaler bacchuss routine
 
