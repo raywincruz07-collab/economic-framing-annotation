@@ -1,0 +1,221 @@
+% ============================================================
+% Economic Framing Annotation -- Professional Technical Report
+% University of Mannheim | May 2026
+% Author: Raywin Cruz Thumma Rayappan
+% Target length: approx. 36 pages including front matter and appendices
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+
+% ------------------------------------------------------------
+% Encoding, language, typography
+% ------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ------------------------------------------------------------
+% Page layout
+% ------------------------------------------------------------
+\usepackage[a4paper,left=2.4cm,right=2.4cm,top=2.2cm,bottom=2.3cm,headheight=14pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.18}
+\usepackage{parskip}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+
+% ------------------------------------------------------------
+% Tables, figures, maths, lists
+% ------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{pdflscape}
+\usepackage{xcolor}
+\usepackage{colortbl}
+
+\setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=1pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=*,topsep=2pt,itemsep=1pt,parsep=0pt}
+\captionsetup{font=small,labelfont=bf,skip=4pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\renewcommand{\arraystretch}{1.08}
+
+% ------------------------------------------------------------
+% Code listings
+% ------------------------------------------------------------
+\usepackage{listings}
+\definecolor{codebg}{RGB}{247,247,247}
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=2,
+  showstringspaces=false,
+  aboveskip=4pt,
+  belowskip=4pt
+}
+
+% ------------------------------------------------------------
+% Links and references
+% ------------------------------------------------------------
+\usepackage[numbers]{natbib}
+\usepackage{xurl}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=uniblue,
+  citecolor=uniblue,
+  urlcolor=uniblue,
+  pdfauthor={Raywin Cruz Thumma Rayappan},
+  pdftitle={Economic Framing Annotation in German Immigration News},
+  pdfsubject={Computational annotation pipeline report},
+  pdfkeywords={economic framing, immigration news, LLM annotation, bacchuss, Mistral}
+}
+
+% ------------------------------------------------------------
+% Header, footer, headings, TOC
+% ------------------------------------------------------------
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+
+\definecolor{uniblue}{RGB}{0,74,153}
+\definecolor{lightgray}{gray}{0.95}
+\definecolor{pass}{RGB}{0,120,0}
+\definecolor{fail}{RGB}{180,0,0}
+\definecolor{warn}{RGB}{190,130,0}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+\titleformat{\section}{\large\bfseries\color{uniblue}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{uniblue!85!black}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{uniblue!70!black}}{\thesubsubsection}{0.7em}{}
+\titlespacing*{\section}{0pt}{1.0em}{0.45em}
+\titlespacing*{\subsection}{0pt}{0.75em}{0.25em}
+\titlespacing*{\subsubsection}{0pt}{0.55em}{0.15em}
+
+\setlength{\cftbeforesecskip}{2pt}
+\setlength{\cftbeforesubsecskip}{0pt}
+
+% ------------------------------------------------------------
+% Custom commands
+% ------------------------------------------------------------
+\newcommand{\passmark}{\textcolor{pass}{\textbf{PASSED~\checkmark}}}
+\newcommand{\failmark}{\textcolor{fail}{\textbf{FAILED~$\times$}}}
+\newcommand{\warnmark}{\textcolor{warn}{\textbf{PARTIAL~$\sim$}}}
+\newcommand{\metric}[1]{\texttt{#1}}
+
+% Compact tables by default where possible
+\AtBeginEnvironment{tabular}{\small}
+\AtBeginEnvironment{longtable}{\small}
+
+\begin{document}
+
+% ============================================================
+% Title page
+% ============================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{1.3cm}
+
+{\Huge\bfseries\color{uniblue} Economic Framing Annotation\\[0.25cm]
+in German Immigration News}\par
+\vspace{0.9cm}
+{\Large\color{uniblue!75!black} A Computational Inference Pipeline for\\
+Large-Scale Frame Detection}\par
+\vspace{1.2cm}
+
+\rule{0.68\textwidth}{0.6pt}\par
+\vspace{0.7cm}
+{\large\bfseries Technical Report}\par
+\vspace{0.8cm}
+{\large Raywin Cruz Thumma Rayappan}\par
+\vspace{0.3cm}
+{\normalsize University of Mannheim\\
+Faculty of Social Sciences\\
+Seminar for Media and Communication Studies}\par
+\vspace{0.9cm}
+{\normalsize Supervisor: Prof.\ Dr.\ Rainer Freudenthaler}\par
+\vspace{0.3cm}
+{\normalsize July 2026}\par
+\vfill
+
+\begin{tabular}{@{}ll@{}}
+\toprule
+Project & \texttt{economic-framing-annotation} \\
+Dataset & 10,000 German immigration-news paragraphs, 2022--2026 \\
+Method & \texttt{bacchuss} annotation routine; Mistral-3-14B \\
+Output & LLM-generated threat/benefit annotations, human-evaluation results, and failure log \\
+\bottomrule
+\end{tabular}
+\end{titlepage}
+
+% ============================================================
+% Front matter
+% ============================================================
+
+\begin{abstract}
+This report details the computational annotation of a 10,000-row corpus of German immigration news for Economic Threat and Economic Benefit frames using an LLM-based approach. During prompt development, a 200-row pilot was used for iteration. The final, untouched 1,002-row human evaluation revealed that the LLM achieved high recall but low precision, resulting in F1 scores of 0.531 for Threat and 0.500 for Benefit. The model demonstrated an over-classification of positive frames. A key methodological limitation is that identical paired submitted coder files were used for reliability statistics, meaning file-level evidence cannot independently establish separate coding processes.
+\end{abstract}
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\listoftables
+\newpage
+\listoffigures
+\newpage
+
+% ============================================================
+% Main matter
+% ============================================================
+\pagenumbering{arabic}
+\input{01_introduction.tex}
+\input{02_literature.tex}
+\input{03_methodology.tex}
+\input{04_pipeline.tex}
+\input{05_iterations.tex}
+\input{06_results.tex}
+\input{07_discussion.tex}
+\input{08_conclusion.tex}
+\markboth{Appendices}{Appendices}
+\input{09_appendix.tex}
+
+% ============================================================
+% References
+% ============================================================
+\newpage
+\markboth{References}{References}
+\section*{References}
+\addcontentsline{toc}{section}{References}
+\begin{enumerate}[label={\textbf{[\arabic*]}},leftmargin=*,itemsep=2pt]
+\item Codebuch SCM Economy Culture Security (2025). University of Mannheim.
+\item de Vreese, C. H., Boomgaarden, H. G., \& Semetko, H. A. (2011). (In)direct framing effects: The effects of news media framing on public support for Turkish membership in the European Union. \textit{Communication Research}, 38(2), 179--205.
+\item Guo, L., Su, C. C., \& Chen, H. T. (2025). Do news frames really have some influence in the real world? A computational analysis of cumulative framing effects on emotions and opinions about immigration. \textit{The International Journal of Press/Politics}, 30(1), 211--231.
+\item Freudenthaler, R. (2025). \textit{bacchuss: Annotation Routine for LLM-Assisted Content Analysis}. R package. GitHub.
+\item Entman, R. M. (1993). Framing: Toward clarification of a fractured paradigm. \textit{Journal of Communication}, 43(4), 51--58.
+\item Boomgaarden, H. G., \& Vliegenthart, R. (2007). Explaining the rise of anti-immigrant parties. \textit{Electoral Studies}, 26(2), 404--417.
+\item Chong, D., \& Druckman, J. N. (2007). Framing theory. \textit{Annual Review of Political Science}, 10, 103--126.
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,10 @@
+metric,value
+source rows,10000
+previous rows excluded,400
+eligible rows,9600
+selected rows,1002
+sampling seed,1002
+blocks,3
+rows per block,334
+coder observations,2004
+coders per row,2

@@ -1,0 +1,202 @@
+% ============================================================
+% Chapter 6: Results
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Production Annotation Execution}
+
+The final production annotation was executed on 2026-05-07 using the validated Run~8 instruction set (few-shot + chain-of-thought reasoning). The full 10,000-row dataset was processed in two sequential passes:
+
+\begin{itemize}
+    \item \textbf{Threat pass:} $\sim$3 hours, processing each paragraph individually with checkpointing every 200 rows
+    \item \textbf{Benefit pass:} $\sim$3 hours, same configuration
+    \item \textbf{Checkpoint system:} RDS checkpoints saved every 200 rows, enabling resume-from-failure
+    \item \textbf{Retry logic:} Each row had up to 3 attempts with 5-second delay between retries
+    \item \textbf{API failures during production:} Minimal---the retry system handled transient errors
+\end{itemize}
+
+The final merged dataset was saved as \texttt{final\_annotated\_10k.csv} with columns for both threat and benefit labels, explanations, and the derived \texttt{frame\_type} category.
+
+\subsection{Final Corpus Distribution}
+
+\begin{table}[H]
+\centering
+\caption{Final Frame Distribution ($N = 10{,}000$)}
+\label{tab:final_distribution}
+\begin{tabular}{@{}lrrp{6cm}@{}}
+\toprule
+\textbf{Frame Type} & \textbf{Count} & \textbf{\%} & \textbf{Interpretation} \\
+\midrule
+Neither frame   & 8,989 & 89.9\% & No economic framing detected \\
+Threat only     &   595 &  6.0\% & Economic threat without benefit \\
+Benefit only    &   280 &  2.8\% & Economic benefit without threat \\
+Both frames     &   136 &  1.4\% & Both threat and benefit in same paragraph \\
+\midrule
+\textbf{Total Threat YES}  & \textbf{731}  & \textbf{7.3\%} & (Threat only + Both) \\
+\textbf{Total Benefit YES} & \textbf{416}  & \textbf{4.2\%} & (Benefit only + Both) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Observation:} The final distribution shows that 89.9\% of paragraphs in the corpus contain no economic framing of immigration. Economic threat framing (7.3\%) is nearly twice as prevalent as economic benefit framing (4.2\%), and mixed framing (1.4\%) is rare.
+
+\subsection{Comparison Across Pipeline Phases}
+
+\begin{table}[H]
+\centering
+\caption{Frame Distribution Evolution Across Pipeline Phases}
+\label{tab:phase_comparison}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Metric} & \textbf{Phase 1} & \textbf{Phase 1 (fixed)} & \textbf{Phase 2} & \textbf{Final} \\
+\midrule
+UNKNOWN       & 48.8\% & 0\%    & 8.0\%  & 0\% \\
+NEITHER       & 50.8\% & 70.0\% & 69.3\% & 89.9\% \\
+Threat YES    & 0.4\%  & 20.4\% & 20.6\% & 7.3\% \\
+Benefit YES   & 0.4\%  & 21.2\% & 14.9\% & 4.2\% \\
+BOTH          & 0.0\%  & 11.7\% & 7.8\%  & 1.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The evolution from Phase~1 to the final run demonstrates the impact of instruction refinement:
+\begin{itemize}
+    \item UNKNOWN labels were completely eliminated (48.8\% $\rightarrow$ 0\%).
+    \item Over-coding was dramatically reduced: Threat from 20.4\% to 7.3\%, Benefit from 21.2\% to 4.2\%.
+    \item The NEITHER rate increased from 70\% to 89.9\%, reflecting the elimination of false positives.
+    \item The BOTH rate decreased from 11.7\% to 1.4\%, indicating that the earlier runs were spuriously detecting co-occurring frames.
+\end{itemize}
+
+\subsection{Frame Distribution by Publication}
+
+The annotated corpus allows examination of framing patterns across different news outlets. The following table presents the economic framing rates for publications with sufficient sample sizes:
+
+\begin{table}[H]
+\centering
+\caption{Economic Framing Rates by Publication (Top Outlets, $N \ge 75$)}
+\label{tab:by_publication}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Publication} & \textbf{N} & \textbf{Threat \%} & \textbf{Benefit \%} & \textbf{Both \%} \\
+\midrule
+Jouwatch & 80 & 31.2\% & 3.8\% & 2.5\% \\
+TA & 221 & 20.4\% & 6.8\% & 4.1\% \\
+Tichys Einblick & 90 & 20.0\% & 6.7\% & 4.4\% \\
+Epoch Times & 75 & 8.0\% & 10.7\% & 0.0\% \\
+Handelsblatt & 135 & 9.6\% & 11.1\% & 6.7\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Framing Dynamics by Publication}
+Table~\ref{tab:by_publication} breaks down frame prevalence by publication for the top sources with at least 75 annotated paragraphs. The analysis reveals descriptive framing differences:
+\begin{itemize}
+    \item \textbf{Highest Threat Framing:} \textit{Jouwatch} (31.2\%), \textit{TA} (20.4\%), and \textit{Tichys Einblick} (20.0\%). These outlets frame immigration substantially more as an economic threat than the corpus average (7.3\%).
+    \item \textbf{Highest Benefit Framing:} Among the displayed outlets, Handelsblatt and Epoch Times had the highest Benefit-frame rates.
+    \item \textbf{Framing Asymmetry:} The displayed outlets differed descriptively in their Threat-to-Benefit ratios.
+\end{itemize}
+
+\subsection{Cross-Tabulation: Threat $\times$ Benefit}
+
+\begin{table}[H]
+\centering
+\caption{Cross-Tabulation of Economic Framing Dimensions}
+\label{tab:crosstab}
+\begin{tabular}{@{}lcc|c@{}}
+\toprule
+ & \textbf{Benefit YES} & \textbf{Benefit NO} & \textbf{Total} \\
+\midrule
+\textbf{Threat YES} & 136  & 595   & 731 \\
+\textbf{Threat NO}  & 280  & 8,989 & 9,269 \\
+\midrule
+\textbf{Total}      & 416  & 9,584 & 10,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cross-tabulation reveals that:
+\begin{itemize}
+    \item 136 paragraphs (1.4\%) contain \textit{both} threat and benefit frames simultaneously, representing mixed economic framing.
+    \item The overlap is relatively small: 18.6\% of Threat paragraphs also contain Benefit framing, and 32.7\% of Benefit paragraphs also contain Threat framing.
+    \item The majority of framed paragraphs invoke only one dimension.
+\end{itemize}
+
+\subsection{Quality Assurance: Manual Spot-Check}
+
+A random sample of 50 production rows was manually reviewed (\path{outputs/step5/spot_check_50rows.csv}). The spot-check verified that the structured explanations were consistent with the assigned labels and that the sub-criteria references (T1--T5, B1--B5) were correctly applied.
+
+\subsection{Final 1,002-Row Human Evaluation}
+\label{sec:final_1002_human_evaluation}
+
+We evaluated the LLM annotations against the final untouched 1,002-row sample.
+
+\subsubsection{Human Consensus Distribution}
+The distribution of the human consensus labels was as follows:
+\begin{itemize}
+    \item Neither frame = 958
+    \item Threat only = 28
+    \item Benefit only = 15
+    \item Both frames = 1
+\end{itemize}
+This results in 29 total Economic Threat positives (prevalence = 2.89\%) and 16 total Economic Benefit positives (prevalence = 1.60\%).
+
+\subsubsection{Submitted Human Reliability}
+The reliability statistics calculated from the submitted paired data were exceptionally high:
+\begin{itemize}
+    \item Pairwise observed agreement = 1.000
+    \item Pairwise Cohen's kappa = 1.000
+    \item Krippendorff's Alpha for Threat = 1.000
+    \item Krippendorff's Alpha for Benefit = 1.000
+    \item Submitted disagreements = 0
+\end{itemize}
+
+The paired submitted files were identical for all three blocks. The calculated agreement statistics describe the submitted data. File-level identity alone does not independently establish that the annotations were produced through separate coding processes.
+
+
+
+\subsubsection{Final LLM Performance Metrics}
+
+\begin{table}[H]
+\centering
+\caption{Final LLM Performance Metrics (N=1002)}
+\label{tab:llm-performance-1002}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Metric} & \textbf{Economic Threat} & \textbf{Economic Benefit} \\
+\midrule
+True Positives (TP) & 26 & 14 \\
+False Positives (FP) & 43 & 26 \\
+False Negatives (FN) & 3 & 2 \\
+True Negatives (TN) & 930 & 960 \\
+\midrule
+Precision & 0.3768 & 0.3500 \\
+Recall & 0.8966 & 0.8750 \\
+F1 Score & 0.5306 & 0.5000 \\
+\midrule
+Accuracy & 0.9541 & 0.9721 \\
+Specificity & 0.9558 & 0.9736 \\
+Negative Predictive Value & 0.9968 & 0.9979 \\
+Balanced Accuracy & 0.9262 & 0.9243 \\
+\midrule
+Human Prevalence & 0.0289 & 0.0160 \\
+LLM Prevalence & 0.0689 & 0.0399 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The total label-level errors amounted to 74, occurring across 70 unique rows. False positives were the dominant error type for both dimensions (43 for Threat and 26 for Benefit).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/validation_1002/figure_human_vs_llm_prevalence.png}
+    \caption{Prevalence comparison between Human Consensus and LLM Predictions}
+    \label{fig:human-llm-prevalence}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/validation_1002/figure_llm_precision_recall_f1.png}
+    \caption{Precision, Recall, and F1 Scores for Threat and Benefit}
+    \label{fig:llm-prf}
+\end{figure}

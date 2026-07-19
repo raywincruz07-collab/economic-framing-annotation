@@ -1,119 +1,74 @@
-# Economic Framing Annotation Pipeline
+# Economic Framing Annotation: An LLM-Assisted Computational Content Analysis
 
-> **Detection of economic threat and benefit framing in 10,000 German immigration news paragraphs using a structured computational inference framework and the bacchuss annotation routine.**
+This repository contains the replication materials and analysis pipeline for evaluating economic threat and benefit framing in media texts. 
 
-[![R](https://img.shields.io/badge/Language-R%204.x-276DC3?logo=r)](https://www.r-project.org/)
-[![Method](https://img.shields.io/badge/Method-Computational%20Inference-orange)](https://mistral.ai/)
-[![Framework](https://img.shields.io/badge/Framework-bacchuss-brightgreen)](https://github.com/Rainer-Freudenthaler/bacchuss)
-[![University](https://img.shields.io/badge/University-Mannheim-004A99)](https://www.uni-mannheim.de/)
-[![Security](https://img.shields.io/badge/Security-Secret--Free-success)](docs/SECURITY_AND_REPRODUCIBILITY.md)
+The study develops an automated annotation pipeline to classify text according to defined economic framing sub-criteria, subsequently comparing the outputs against human consensus evaluations to measure system reliability and limitations.
 
----
+## Research Questions
 
-## 1. Problem Statement
-This repository contains the complete annotation pipeline developed for the project **economic-framing-annotation** at the University of Mannheim. The goal was to automatically classify 10,000 paragraphs from German immigration news articles (2022–2026) along two binary economic framing dimensions: **Economic Threat** (harm to society) and **Economic Benefit** (value generation).
-
-The pipeline follows the **bacchuss annotation routine** (Freudenthaler) and is grounded in the *SCM Economy Culture Security Codebuch* (2025) and *de Vreese et al. (2010)*.
+1. How reliably can Large Language Models (LLMs) replicate human annotation of complex, multi-criteria economic frames (threat and benefit)?
+2. What are the specific conditions and linguistic nuances where automated classification diverges from human consensus in framing analysis?
+3. How do identified framing frequencies vary across publication outlets in the dataset?
 
 ## Pipeline Architecture
 
+The following diagram illustrates the study's sequential research methodology:
+
 ```mermaid
-flowchart TD
-    Raw[(Full News Corpus)] --> Step0[0. Draw 200-row Sample]
-    Step0 --> Step2[2. Zero-shot & Hardcases]
-    Step2 --> Step3[3. Few-shot & Chain of Thought]
-    Step3 --> Step4[4. Human Gold Standard Validation]
-    Step4 --> Valid{Validation Passed?}
-    Valid -- Yes --> Step5[5. Full-Dataset Annotation Run]
-    Step5 --> Step6[6. Final Reporting]
+graph TD
+    A[Data Preparation & Translation] --> B(Zero-Shot Exploration)
+    B --> C(Prompt Engineering & Few-Shot CoT)
+    C --> D[Prompt-Development Pilot<br/>n=200]
+    D --> E(Production Annotation)
+    E --> F[Full Corpus Results<br/>n=10,000]
+    F --> G(Human Comparison Study)
+    G --> H[Submitted Human Comparison<br/>n=1,002]
+    H --> I((Analysis & Reporting))
 ```
 
-## 2. Key Findings
-The final validated results against a 200-row human gold standard:
+## Class Definitions
 
-| Dimension | Precision | Recall | **F1-Score** | Gate (≥ 0.80) |
-|---|---|---|---|---|
-| **Economic Threat** | 0.833 | 0.789 | **0.811** | ✅ PASSED |
-| **Economic Benefit** | 0.625 | 1.000 | **0.769** | 🟢 Accepted¹ |
+The annotation schema divides economic framing into two primary dimensions. These dimensions are not mutually exclusive; a single paragraph can contain neither, one, or both frames.
 
-> ¹ Benefit F1 reflects statistical fragility from low prevalence (2.5%). The system achieved **perfect Recall (1.000)**.
+### Economic Threat
+A paragraph is coded as containing an Economic Threat frame if it explicitly mentions any of the following:
+- General threats to economic well-being or prospects.
+- Specific threats to the economic prospects of the receiving country/region.
+- Labor market harm (e.g., displacement, wage depression).
+- Strain on welfare or public finances (e.g., taxpayer burden, benefit depletion).
+- Explicit mentions of capacity limits, financial costs, resource shortages, or infrastructure overload (e.g., housing shortages, administrative backlogs).
 
-## 3. Repository Structure
-```text
-economic-framing-annotation/
-├── README.md                          ← This file
-├── config.R                           ← Central config: API, instructions, few-shot sets
-├── .Renviron.example                  ← Template for API security
-├── scripts/                           ← Pipeline scripts (run in order)
-│   ├── step0_draw_sample.R            ← Draw fixed 200-row sample
-│   ├── step2_1_zeroshot.R             ← Baseline test
-│   ├── step2_2_hardcases.R            ← Consistency check
-│   ├── step3_1_baseline.R             ← Logic validation
-│   ├── step3_2_fewshot_cot.R          ← Full-dataset logic validation
-│   ├── step4_validation.R             ← Human gold standard check
-│   ├── step5_full_annotation.R        ← Full-dataset annotation run
-│   ├── step6_report.R                 ← Statistics report
-│   ├── utils.R                        ← Shared helper functions
-│   └── check_project_integrity.R      ← Project state validator
-├── data/                              ← Datasets (Raw, Sample, Few-shot)
-├── outputs/                           ← Generated results (per step)
-├── reports/                           ← Audit trail and F1 reports
-├── docs/                              ← Academic documentation
-└── references/                        ← Academic codebooks and papers
-```
+### Economic Benefit
+A paragraph is coded as containing an Economic Benefit frame if it explicitly mentions any of the following:
+- Positive economic effects such as tax revenue or economic growth.
+- Overall positive economic effects for the receiving country/region.
+- Demographic necessity (e.g., aging populations, shrinking workforce).
+- Filling labor shortages or providing necessary skills.
+- The potential for prosperity contingent on integration measures, or the explicit loss of economic benefits due to restrictive policies (e.g., unrecognised degrees, lack of work permits).
 
-## 4. Final Output File
-The primary output of this research project is:
-- **`outputs/step5/final_annotated_10k.csv`**
-- Includes: Original German text, English translation, binary framing labels (YES/NO), and structured evidence-based explanations.
+## Verified Results
 
-## 5. Reproducibility
-### Prerequisites
-```r
-install.packages(c("bacchuss", "readr", "dplyr", "tidyr", "caret", "irr", "tibble"))
-```
+The analysis generated three distinct tiers of results across the pipeline:
 
-### Configuration & Security
-1. Copy `.Renviron.example` to `.Renviron`.
-2. Configure your API credentials (including `MAKI_API_KEY`) in `.Renviron`.
-3. The `config.R` file will automatically load these environment variables. **Do not hardcode API keys or credentials directly in any script.**
+### 1. Prompt-Development Pilot (n = 200)
+Initial iterative prompt development was conducted on a 200-row sample to identify boundary conditions and optimize the Few-Shot Chain-of-Thought (CoT) instructions.
 
-### Execution
-Run the scripts in numbered order (e.g., `Rscript scripts/step0_draw_sample.R`).
+### 2. Production Results (n = 10,000)
+The finalized prompting strategy was applied to the full 10,000-row translated dataset to establish baseline prevalence rates of threat and benefit frames across the corpus.
 
-## 6. Documentation Links
-- [Methodology & Limitations](docs/METHODOLOGY.md)
-- [Security & Reproducibility Strategy](docs/SECURITY_AND_REPRODUCIBILITY.md)
-- [Bacchuss Routine Mapping](docs/BACCHUSS_ROUTINE_MAPPING.md)
+### 3. Submitted Human Comparison (n = 1,002)
+A submitted 1,002-row human-labelled comparison set was used to compare the LLM outputs with human consensus labels. The submitted paired coder files were identical, so the calculated agreement statistics describe the files but do not independently establish separate coding processes. The LLM's outputs were compared against this human consensus to calculate pairwise reliability, Krippendorff's Alpha, precision, and recall metrics.
 
-## 7. Intercoder Reliability
-Human-human reliability status:
-- **Status:** READY. Template provided in `data/intercoder/`.
-- **Script:** `scripts/step4_0_intercoder_reliability.R`.
-- **Note:** Intercoder reliability is prepared with scripts and templates; real overlap annotations are included only in the full submission package.
+## Verified Limitations
 
-## 8. Data Availability
+This study contains several methodological limitations that constrain the generalizability of the findings:
 
-This GitHub repository is the public-safe reproducible version of the project.
+- **19-Row Pilot/Evaluation Overlap**: There is an inadvertent 19-row overlap between the prompt-development pilot set and the final evaluation set, slightly reducing the strict independence of the test.
+- **Identical Paired Submitted Coder Files**: In the submitted records, paired individual coder files were found to be identical, limiting the ability to assess true initial inter-coder divergence prior to consensus.
+- **Coder-Workbook Criterion Mismatch**: There are documented discrepancies between the operational criteria provided in the coding workbooks and the final synthesized instructions used for evaluation.
+- **Translation Limitations**: The analysis was conducted on English translations of original German texts, potentially introducing translational artifacts or losing language-specific nuances.
+- **Low Positive-Frame Prevalence**: The extreme sparsity of the Economic Benefit frame within the dataset restricts the statistical power available to evaluate the model's recall on positive framing.
+- **Paragraph-Level Context Limitations**: Classification occurred strictly at the paragraph level, meaning broader narrative context or article-level intent was inaccessible to both human coders and the model.
+- **Descriptive-Only Outlet Comparisons**: Analyses comparing framing across different publication outlets remain purely descriptive and do not establish causal relationships.
 
-Large/private project files are excluded from GitHub, including:
-
-- `data/raw/dataset_10k_translated.csv`
-- `outputs/step5/final_annotated_10k.csv`
-
-These files are included only in the academic submission package.
-
-To reproduce the full pipeline, place the required datasets in the documented paths and configure the API credentials using `.Renviron.example`.
-
-## 9. Limitations
-
-- **Generalizability:** Models and prompts were tuned strictly on German immigration news. Performance on other topics is not guaranteed.
-- **Prevalence Effects:** The low prevalence of "Economic Benefit" frames (2.5%) statistically constrains precision despite achieving perfect recall.
-
----
-*Project economic-framing-annotation · University of Mannheim · 2026*
-
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+**Note on Evaluation**: The human consensus dataset serves as a functional comparison point for this study, but should not be considered a perfect gold standard. True independent annotation reliability has not been definitively proven. Furthermore, the model configuration presented here is strictly an exploratory research tool and is not production-ready for automated media monitoring.

@@ -1,0 +1,7 @@
+block,coder1,coder2,label,n,pos1,pos2,both_pos,both_neg,disagreements,pct_agreement,pos_agreement,neg_agreement,cohens_kappa,expected_agreement,kappa_defined,kappa_note
+Part_A,raywin,pravallika,economic_threat,334,13,13,13,321,0,1,1,1,1.0,0.9251855570296532,Yes,
+Part_A,raywin,pravallika,economic_benefit,334,7,7,7,327,0,1,1,1,1.0,0.9589623148911757,Yes,
+Part_B,raywin,namrath,economic_threat,334,12,12,12,322,0,1,1,1,1.0,0.9307253755961133,Yes,
+Part_B,raywin,namrath,economic_benefit,334,6,6,6,328,0,1,1,1,1.0,0.9647172720427408,Yes,
+Part_C,namrath,pravallika,economic_threat,334,4,4,4,330,0,1,1,1,1.0,0.9763347556384239,Yes,
+Part_C,namrath,pravallika,economic_benefit,334,3,3,3,331,0,1,1,1,1.0,0.9821972820825415,Yes,
